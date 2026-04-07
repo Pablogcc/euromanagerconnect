@@ -1,5 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:dart_odbc/dart_odbc.dart';
+import 'ui/main_screen.dart';
+import 'ui/db_config_page.dart';
 
 void main() {
   // Punto de entrada de la app del conector.
@@ -18,7 +20,7 @@ class ConnectorApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
         useMaterial3: true,
       ),
-      home: const ConnectionTestPage(),
+      home: const MainScreen(),
     );
   }
 }
@@ -223,3 +225,5 @@ class _StatusRow extends StatelessWidget {
     );
   }
 }
+
+
