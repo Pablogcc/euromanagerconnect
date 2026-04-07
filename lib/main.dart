@@ -47,6 +47,7 @@ class _ConnectionTestPageState extends State<ConnectionTestPage> {
   bool _isBusy = false;
   String _status = 'Sin probar';
   String _lastError = '';
+  List<Map<String, dynamic>> _rows = [];
   DateTime? _lastAttempt;
 
   Future<void> _testConnection() async {
@@ -56,20 +57,29 @@ class _ConnectionTestPageState extends State<ConnectionTestPage> {
       _isBusy = true;
       _status = 'Conectando...';
       _lastError = '';
+      _rows = [];
       _lastAttempt = DateTime.now();
     });
 
-    // Cliente ODBC para abrir/cerrar la conexion.
-    final odbc = DartOdbc();
+    // Usamos el cliente ODBC en modo "blocking".
+    // Motivo: con el modo non-blocking (isolate) aparecian errores HY001 al leer filas.
+    // Asi aislamos el problema en el driver y evitamos conversiones raras en segundo plano.
+    final odbc = DartOdbcBlockingClient();
     try {
       // Conecta por connection string (sin DSN).
       await odbc.connectWithConnectionString(_connectionString);
-      // Lectura directa con columnas pequenas (evita campos grandes).
+      // Leemos pocas filas a proposito para probar la consulta sin cargar toda la tabla.
+      // Convertimos las fechas a texto (VARCHAR) porque el driver fallaba con datetime/smalldatetime.
+      // Esto nos permite mostrar datos reales sin que salte el error HY001.
       final rows = await odbc.execute(
-        'SELECT COUNT(1) AS total FROM dbo.Albaranes',
+        'SELECT TOP 50 '
+        'AlbId, AlbSerie, AlbAño, AlbEmpresa, AlbNumero, '
+        'CONVERT(varchar(19), AlbFecha, 120) AS AlbFecha, '
+        'AlbCliente '
+        'FROM dbo.Albaranes',
       );
-      final total = rows.isNotEmpty ? rows.first['total'] : 0;
-      _status = 'OK (Albaranes: $total)';
+      _status = 'OK (Filas leidas: ${rows.length})';
+      _rows = rows;
     } catch (e) {
       _status = 'ERROR';
       _lastError = e.toString();
@@ -132,6 +142,27 @@ class _ConnectionTestPageState extends State<ConnectionTestPage> {
               ),
               const SizedBox(height: 6),
               SelectableText(_lastError),
+            ],
+            // Mostramos las filas devueltas en una lista con scroll.
+            // Al usar ListView solo se dibuja lo visible y no se bloquea la ventana.
+            if (_rows.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const Text(
+                'Datos (primeras filas)',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              // Expanded obliga a que la lista ocupe el espacio disponible
+              // y evita el error de overflow por falta de altura.
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _rows.length,
+                  itemBuilder: (context, index) {
+                    final row = _rows[index];
+                    return Text(row.toString());
+                  },
+                ),
+              ),
             ],
           ],
         ),
