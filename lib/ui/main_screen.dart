@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import '../data/sql/sql_cliente.dart';
-import '../config/db_config_store.dart';
-import 'db_config_page.dart';
+import '../config/db_almacen_configuracion.dart';
+import 'conexion_servidor.dart';
 
 // Pantalla principal del conector.
 // Muestra el estado de conexion y da acceso a la pantalla de ajustes.

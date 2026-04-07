@@ -65,4 +65,34 @@ class DbConfig {
         'Encrypt=$encryptValue;'
         'TrustServerCertificate=$trustCert;';
   }
+
+  // Convierte la configuracion a un Map para guardarla en Hive.
+  Map<String, dynamic> toMap() {
+    return {
+      'server': server,
+      'instance': instance,
+      'port': port,
+      'database': database,
+      'username': username,
+      'password': password,
+      'trustedConnection': trustedConnection,
+      'encrypt': encrypt,
+      'trustServerCertificate': trustServerCertificate,
+    };
+  }
+
+  // Reconstruye la configuracion desde un Map guardado en Hive.
+  static DbConfig fromMap(Map<dynamic, dynamic> map) {
+    return DbConfig(
+      server: map['server'] as String,
+      instance: map['instance'] as String,
+      port: map['port'] as int?,
+      database: map['database'] as String,
+      username: map['username'] as String?,
+      password: map['password'] as String?,
+      trustedConnection: map['trustedConnection'] as bool,
+      encrypt: map['encrypt'] as bool,
+      trustServerCertificate: map['trustServerCertificate'] as bool,
+    );
+  }
 }
