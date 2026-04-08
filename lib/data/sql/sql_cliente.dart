@@ -23,4 +23,19 @@ class SqlCliente {
       } catch (_) {}
     }
   }
+
+  // Obtiene la lista de empresas desde la tabla Empresa (campo Empresa).
+  Future<List<Map<String, dynamic>>> fetchEmpresas(DbConfig config) async {
+    final odbc = DartOdbcBlockingClient();
+    try {
+      await odbc.connectWithConnectionString(config.connectionString);
+      return await odbc.execute(
+        'SELECT IdEmpresa, Empresa FROM Empresa ORDER BY Empresa',
+      );
+    } finally {
+      try {
+        await odbc.disconnect();
+      } catch (_) {}
+    }
+  }
 }

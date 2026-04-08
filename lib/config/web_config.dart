@@ -1,5 +1,6 @@
 class WebEndpoint {
   WebEndpoint({
+    required this.idEmpresa,
     required this.empresa,
     required this.url,
     required this.proyecto,
@@ -7,6 +8,8 @@ class WebEndpoint {
     this.contrasena,
   });
 
+  // Id interno de empresa en SQL Server.
+  final int? idEmpresa;
   // Nombre visible de la empresa asociada a esta conexion.
   final String empresa;
   // URL base del servidor web (ej: https://miempresa.com).
@@ -21,6 +24,7 @@ class WebEndpoint {
 
   Map<String, dynamic> toMap() {
     return {
+      'idEmpresa': idEmpresa,
       'empresa': empresa,
       'url': url,
       'proyecto': proyecto,
@@ -31,6 +35,7 @@ class WebEndpoint {
 
   static WebEndpoint fromMap(Map<dynamic, dynamic> map) {
     return WebEndpoint(
+      idEmpresa: map['idEmpresa'] as int?,
       empresa: map['empresa'] as String? ?? '',
       url: map['url'] as String,
       proyecto: map['proyecto'] as String,
@@ -78,6 +83,7 @@ class WebConfig {
         if (item is String && item.trim().isNotEmpty) {
           conexiones.add(
             WebEndpoint(
+              idEmpresa: null,
               empresa: '',
               url: item.trim(),
               proyecto: proyecto,
@@ -94,6 +100,7 @@ class WebConfig {
     if (conexiones.isEmpty && legacyUrl is String && legacyUrl.trim().isNotEmpty) {
       conexiones.add(
         WebEndpoint(
+          idEmpresa: null,
           empresa: '',
           url: legacyUrl.trim(),
           proyecto: map['proyecto'] as String? ?? '',

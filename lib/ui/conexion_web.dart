@@ -61,6 +61,7 @@ class _ConexionWebPageState extends State<ConexionWebPage> {
     final config = WebConfig(
       conexiones: [
         WebEndpoint(
+          idEmpresa: null,
           empresa: '',
           url: url,
           proyecto: proyecto,

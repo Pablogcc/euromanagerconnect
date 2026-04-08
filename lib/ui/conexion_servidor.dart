@@ -359,15 +359,17 @@ class _WebConfigFormState extends State<_WebConfigForm> {
       _error = '';
     });
 
-    // Validacion minima: todas deben tener URL, Proyecto y Empresa.
+    // Validacion minima: todas deben tener IdEmpresa, URL y Proyecto.
     for (final c in _conexiones) {
-      if (c.empresa.trim().isEmpty ||
+      if (c.idEmpresa == null ||
+          c.empresa.trim().isEmpty ||
           c.url.trim().isEmpty ||
           c.proyecto.trim().isEmpty) {
         setState(() {
           _isBusy = false;
           _estado = 'ERROR';
-          _error = 'Todas las conexiones deben tener Empresa, URL y Proyecto.';
+          _error =
+              'Todas las conexiones deben tener IdEmpresa, Empresa, URL y Proyecto.';
         });
         return;
       }
@@ -437,7 +439,9 @@ class _WebConfigFormState extends State<_WebConfigForm> {
                 final item = _conexiones[index];
                 return ListTile(
                   title: Text(
-                    item.empresa.isEmpty ? 'Empresa sin nombre' : item.empresa,
+                    item.empresa.isEmpty
+                        ? 'Empresa sin nombre'
+                        : '${item.idEmpresa ?? '-'} - ${item.empresa}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text('${item.url} | ${item.proyecto}'),
@@ -508,11 +512,17 @@ Future<WebEndpoint?> _mostrarDialogoConexion(
   BuildContext context, {
   WebEndpoint? actual,
 }) async {
-  final empresaCtrl = TextEditingController(text: actual?.empresa ?? '');
   final urlCtrl = TextEditingController(text: actual?.url ?? '');
   final proyectoCtrl = TextEditingController(text: actual?.proyecto ?? '');
   final usuarioCtrl = TextEditingController(text: actual?.usuario ?? '');
   final contrasenaCtrl = TextEditingController(text: actual?.contrasena ?? '');
+
+  // Cargamos la lista de empresas desde SQL (si hay conexion configurada).
+  final empresas = await _cargarEmpresasDesdeSql();
+  final empresaInicial = empresas.firstWhere(
+    (e) => e.nombre == actual?.empresa && e.id == actual?.idEmpresa,
+    orElse: () => empresas.isNotEmpty ? empresas.first : EmpresaOption.vacia(),
+  );
 
   return showDialog<WebEndpoint>(
     context: context,
@@ -520,6 +530,8 @@ Future<WebEndpoint?> _mostrarDialogoConexion(
       final estiloTitulo = Theme.of(context).textTheme.bodyLarge;
       final estiloAviso = Theme.of(context).textTheme.labelSmall;
       bool mostrarContrasena = false;
+      EmpresaOption? empresaSeleccionada =
+          empresaInicial.id == null ? null : empresaInicial;
       return AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -545,9 +557,32 @@ Future<WebEndpoint?> _mostrarDialogoConexion(
                   children: [
                     const Text('Rellena los datos de la conexion.'),
                     const SizedBox(height: ConstantesUI.espacio),
-                    TextField(
-                      controller: empresaCtrl,
-                      decoration: const InputDecoration(labelText: 'Empresa'),
+                    if (empresas.isEmpty)
+                      const Text(
+                        'No se pudieron cargar empresas desde SQL.',
+                      ),
+                    DropdownButtonFormField<EmpresaOption>(
+                      value: empresaSeleccionada,
+                      isExpanded: true,
+                      items: empresas
+                          .map(
+                            (e) => DropdownMenuItem<EmpresaOption>(
+                              value: e,
+                              child: Text('${e.id} - ${e.nombre}'),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: empresas.isEmpty
+                          ? null
+                          : (value) {
+                              setLocalState(() {
+                                empresaSeleccionada = value;
+                              });
+                            },
+                      decoration: const InputDecoration(
+                        labelText: 'Empresa',
+                        hintText: 'Selecciona una empresa',
+                      ),
                     ),
                     TextField(
                       controller: urlCtrl,
@@ -615,7 +650,8 @@ Future<WebEndpoint?> _mostrarDialogoConexion(
             onPressed: () {
               Navigator.of(context).pop(
                 WebEndpoint(
-                  empresa: empresaCtrl.text.trim(),
+                  idEmpresa: empresaSeleccionada?.id,
+                  empresa: (empresaSeleccionada?.nombre ?? '').trim(),
                   url: urlCtrl.text.trim(),
                   proyecto: proyectoCtrl.text.trim(),
                   usuario: usuarioCtrl.text.trim().isEmpty
@@ -633,4 +669,37 @@ Future<WebEndpoint?> _mostrarDialogoConexion(
       );
     },
   );
+}
+
+// Carga las empresas desde la tabla Empresa (campo Empresa).
+Future<List<EmpresaOption>> _cargarEmpresasDesdeSql() async {
+  final config = DbConfigStore.current;
+  if (config == null) {
+    return [];
+  }
+  try {
+    final rows = await SqlCliente().fetchEmpresas(config);
+    final empresas = <EmpresaOption>[];
+    for (final row in rows) {
+      final idValue = row['IdEmpresa'];
+      final nombreValue = row['Empresa'];
+      final id = idValue is int ? idValue : int.tryParse('$idValue');
+      if (id != null && nombreValue is String && nombreValue.trim().isNotEmpty) {
+        empresas.add(EmpresaOption(id: id, nombre: nombreValue.trim()));
+      }
+    }
+    return empresas;
+  } catch (_) {
+    return [];
+  }
+}
+
+// Opcion de empresa para el dropdown.
+class EmpresaOption {
+  const EmpresaOption({required this.id, required this.nombre});
+
+  final int? id;
+  final String nombre;
+
+  static EmpresaOption vacia() => const EmpresaOption(id: null, nombre: '');
 }
