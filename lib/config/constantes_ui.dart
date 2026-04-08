@@ -8,10 +8,14 @@ class ConstantesUI {
 
   // Espaciados base.
   static const double espacio = 12;
+  // Espacio reducido para separar elementos muy cercanos.
+  static const double espacioPequeno = 8;
   static const double espacioGrande = 16;
 
   // Anchura recomendada para campos en escritorio.
   static const double anchoCampo = 360;
+  // Anchura recomendada para dialogos de creacion/edicion.
+  static const double anchoDialogCreacion = 560;
 
   // Margen general de pantalla.
   static const EdgeInsets paddingPantalla = EdgeInsets.all(16);

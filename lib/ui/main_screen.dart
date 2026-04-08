@@ -14,7 +14,9 @@ class MainScreen extends StatelessWidget {
     final webConfig = WebConfigStore.current;
 
     final estadoSql = sqlConfig == null ? 'Sin configurar' : 'Configurado';
-    final estadoWeb = webConfig == null ? 'Sin configurar' : 'Configurado';
+    final estadoWeb = webConfig == null
+        ? 'Sin configurar'
+        : 'Configurado (${webConfig.conexiones.length} conexiones)';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

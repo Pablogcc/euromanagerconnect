@@ -13,6 +13,7 @@ class ConexionWebPage extends StatefulWidget {
 }
 
 class _ConexionWebPageState extends State<ConexionWebPage> {
+  // Campos de una sola conexion web.
   final _urlCtrl = TextEditingController();
   final _proyectoCtrl = TextEditingController();
   final _usuarioCtrl = TextEditingController();
@@ -27,10 +28,13 @@ class _ConexionWebPageState extends State<ConexionWebPage> {
     super.initState();
     final saved = WebConfigStore.current;
     if (saved != null) {
-      _urlCtrl.text = saved.url;
-      _proyectoCtrl.text = saved.proyecto;
-      _usuarioCtrl.text = saved.usuario ?? '';
-      _contrasenaCtrl.text = saved.contrasena ?? '';
+      final first = saved.conexiones.isNotEmpty ? saved.conexiones.first : null;
+      if (first != null) {
+        _urlCtrl.text = first.url;
+        _proyectoCtrl.text = first.proyecto;
+        _usuarioCtrl.text = first.usuario ?? '';
+        _contrasenaCtrl.text = first.contrasena ?? '';
+      }
       _estado = 'Configuración cargada';
     }
   }
@@ -42,11 +46,30 @@ class _ConexionWebPageState extends State<ConexionWebPage> {
       _error = '';
     });
 
+    final url = _urlCtrl.text.trim();
+    final proyecto = _proyectoCtrl.text.trim();
+
+    if (url.isEmpty || proyecto.isEmpty) {
+      setState(() {
+        _isBusy = false;
+        _estado = 'ERROR';
+        _error = 'Debes indicar URL y Proyecto.';
+      });
+      return;
+    }
+
     final config = WebConfig(
-      url: _urlCtrl.text.trim(),
-      proyecto: _proyectoCtrl.text.trim(),
-      usuario: _usuarioCtrl.text.trim().isEmpty ? null : _usuarioCtrl.text.trim(),
-      contrasena: _contrasenaCtrl.text.isEmpty ? null : _contrasenaCtrl.text,
+      conexiones: [
+        WebEndpoint(
+          url: url,
+          proyecto: proyecto,
+          usuario: _usuarioCtrl.text.trim().isEmpty
+              ? null
+              : _usuarioCtrl.text.trim(),
+          contrasena:
+              _contrasenaCtrl.text.isEmpty ? null : _contrasenaCtrl.text,
+        ),
+      ],
     );
 
     try {
