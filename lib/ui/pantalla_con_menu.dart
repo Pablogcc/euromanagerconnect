@@ -6,6 +6,7 @@ import 'main_screen.dart';
 import 'conexion_servidor.dart';
 
 // Pantalla principal con menu lateral a la izquierda.
+// El estilo sigue el sidebar del proyecto web (fondo morado, items con hover y seleccionado).
 class PantallaConMenu extends StatefulWidget {
   const PantallaConMenu({super.key});
 
@@ -59,13 +60,14 @@ class _PantallaConMenuState extends State<PantallaConMenu> {
       backgroundColor: Colors.white,
       body: Row(
         children: [
-          // Menu lateral
-          Container(
-            width: 220,
+          // Sidebar
+          Material(
             color: ConstantesUI.colorPrimario,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+            child: SizedBox(
+              width: 240,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                 const SizedBox(height: 28),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
@@ -79,21 +81,30 @@ class _PantallaConMenuState extends State<PantallaConMenu> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                _MenuItem(
-                  icono: Icons.home,
-                  titulo: 'Principal',
-                  seleccionado: _indice == 0,
-                  onTap: () => setState(() => _indice = 0),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: Scrollbar(
+                    thumbVisibility: true,
+                    trackVisibility: true,
+                    child: ListView(
+                      children: [
+                        _SidebarItem(
+                          icono: Icons.home,
+                          titulo: 'Principal',
+                          seleccionado: _indice == 0,
+                          onTap: () => setState(() => _indice = 0),
+                        ),
+                        _SidebarItem(
+                          icono: Icons.settings,
+                          titulo: 'Ajustes',
+                          seleccionado: _indice == 1,
+                          onTap: () => setState(() => _indice = 1),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                _MenuItem(
-                  icono: Icons.settings,
-                  titulo: 'Ajustes',
-                  seleccionado: _indice == 1,
-                  onTap: () => setState(() => _indice = 1),
-                ),
-                const Spacer(),
-                _MenuItem(
+                _SidebarItem(
                   icono: Icons.exit_to_app,
                   titulo: 'Salir',
                   seleccionado: false,
@@ -101,6 +112,7 @@ class _PantallaConMenuState extends State<PantallaConMenu> {
                 ),
                 const SizedBox(height: 16),
               ],
+              ),
             ),
           ),
           // Contenido principal
@@ -117,8 +129,8 @@ class _PantallaConMenuState extends State<PantallaConMenu> {
   }
 }
 
-class _MenuItem extends StatelessWidget {
-  const _MenuItem({
+class _SidebarItem extends StatelessWidget {
+  const _SidebarItem({
     required this.icono,
     required this.titulo,
     required this.seleccionado,
@@ -132,26 +144,20 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        color: seleccionado ? ConstantesUI.colorSecundario : Colors.transparent,
-        child: Row(
-          children: [
-            Icon(icono, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Text(
-              titulo,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+    return ListTile(
+      hoverColor: ConstantesUI.colorSecundario.withOpacity(0.8),
+      selectedTileColor: ConstantesUI.colorSecundario,
+      selected: seleccionado,
+      leading: Icon(icono, color: Colors.white, size: 20),
+      title: Text(
+        titulo,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
         ),
       ),
+      onTap: onTap,
     );
   }
 }
