@@ -1,86 +1,62 @@
 ﻿import 'package:flutter/material.dart';
-import '../data/sql/sql_cliente.dart';
 import '../config/db_almacen_configuracion.dart';
-import 'conexion_servidor.dart';
+import '../config/web_almacen_configuracion.dart';
+import '../config/constantes_ui.dart';
 
-// Pantalla principal del conector.
-// Muestra el estado de conexion y da acceso a la pantalla de ajustes.
-class MainScreen extends StatefulWidget {
+// Pantalla principal del conector (contenido).
+// Muestra estado de conexion y estado tecnico basico.
+class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  Widget build(BuildContext context) {
+    final sqlConfig = DbConfigStore.current;
+    final webConfig = WebConfigStore.current;
+
+    final estadoSql = sqlConfig == null ? 'Sin configurar' : 'Configurado';
+    final estadoWeb = webConfig == null ? 'Sin configurar' : 'Configurado';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Panel principal',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: ConstantesUI.colorPrimario,
+              ),
+        ),
+        const SizedBox(height: ConstantesUI.espacioGrande),
+        _EstadoItem(titulo: 'SQL Server', valor: estadoSql),
+        _EstadoItem(titulo: 'Conexión web', valor: estadoWeb),
+        const SizedBox(height: ConstantesUI.espacioGrande),
+        const Text('Logs (pendiente)'),
+      ],
+    );
+  }
 }
 
-class _MainScreenState extends State<MainScreen> {
-  bool _isBusy = false;
-  String _status = 'Sin configurar';
-  String _error = '';
+class _EstadoItem extends StatelessWidget {
+  const _EstadoItem({required this.titulo, required this.valor});
 
-  // Prueba la conexion usando la configuracion guardada en memoria.
-  Future<void> _testConnection() async {
-    final config = DbConfigStore.current;
-    if (config == null) {
-      setState(() {
-        _status = 'Sin configurar';
-        _error = '';
-      });
-      return;
-    }
-
-    setState(() {
-      _isBusy = true;
-      _status = 'Probando conexion...';
-      _error = '';
-    });
-
-    try {
-      await SqlCliente().testConnection(config);
-      setState(() => _status = 'Conectado OK');
-    } catch (e) {
-      setState(() {
-        _status = 'ERROR';
-        _error = e.toString();
-      });
-    } finally {
-      setState(() => _isBusy = false);
-    }
-  }
+  final String titulo;
+  final String valor;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Conector - Principal')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Estado: $_status'),
-            if (_error.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              SelectableText('Error: $_error'),
-            ],
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              children: [
-                ElevatedButton(
-                  onPressed: _isBusy ? null : _testConnection,
-                  child: Text(_isBusy ? 'Probando...' : 'Probar conexion'),
-                ),
-                OutlinedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const DbConfigPage()),
-                    );
-                  },
-                  child: const Text('Ajustes'),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: ConstantesUI.espacio),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(
+              titulo,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          ],
-        ),
+          ),
+          Text(valor),
+        ],
       ),
     );
   }

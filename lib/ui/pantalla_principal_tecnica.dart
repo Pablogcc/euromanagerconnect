@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../config/db_almacen_configuracion.dart';
+import 'conexion_web.dart';
 import '../data/sql/sql_cliente.dart';
 import 'conexion_servidor.dart';
 
@@ -32,7 +33,7 @@ class _PantallaPrincipalTecnicaState extends State<PantallaPrincipalTecnica> {
 
     setState(() {
       _isBusy = true;
-      _estado = 'Probando conexión...';
+      _estado = 'Probando conexiÃ³n...';
       _ultimoError = '';
       _ultimaComprobacion = DateTime.now();
     });
@@ -60,14 +61,14 @@ class _PantallaPrincipalTecnicaState extends State<PantallaPrincipalTecnica> {
         _ultimaComprobacion == null ? 'Nunca' : _ultimaComprobacion.toString();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Conector - Panel Técnico')),
+      appBar: AppBar(title: const Text('Conector - Panel TÃ©cnico')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Estado: $_estado'),
-            Text('Última comprobación: $ultima'),
+            Text('Ãšltima comprobaciÃ³n: $ultima'),
             if (_ultimoError.isNotEmpty) ...[
               const SizedBox(height: 8),
               SelectableText('Error: $_ultimoError'),
@@ -78,7 +79,7 @@ class _PantallaPrincipalTecnicaState extends State<PantallaPrincipalTecnica> {
               children: [
                 ElevatedButton(
                   onPressed: _isBusy ? null : _probarConexion,
-                  child: Text(_isBusy ? 'Probando...' : 'Probar conexión'),
+                  child: Text(_isBusy ? 'Probando...' : 'Probar conexiÃ³n'),
                 ),
                 OutlinedButton(
                   onPressed: () {
@@ -88,6 +89,14 @@ class _PantallaPrincipalTecnicaState extends State<PantallaPrincipalTecnica> {
                   },
                   child: const Text('Ajustes'),
                 ),
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ConexionWebPage()),
+                    );
+                  },
+                  child: const Text('Conexión web'),
+                ),
               ],
             ),
           ],
@@ -96,3 +105,4 @@ class _PantallaPrincipalTecnicaState extends State<PantallaPrincipalTecnica> {
     );
   }
 }
+
