@@ -38,4 +38,50 @@ class SqlCliente {
       } catch (_) {}
     }
   }
+
+  // Trae cabecera + linea (JOIN) de albaranes del SQL Server del cliente.
+  // Version minima para evitar problemas de memoria del driver.
+  Future<List<Map<String, dynamic>>> fetchAlbventaJoin(
+    DbConfig config, {
+    int limit = 10,
+  }) async {
+    final odbc = DartOdbcBlockingClient();
+    try {
+      await odbc.connectWithConnectionString(config.connectionString);
+
+      // SQL Server: usamos TOP para limitar.
+      final sql = '''
+SELECT TOP ($limit)
+  a.[AlbId],
+  a.[AlbSerie],
+  a.[AlbEmpresa],
+  a.[AlbNumero],
+  CONVERT(VARCHAR(19), a.[AlbFecha], 120) AS AlbFecha,
+  a.[AlbCliente],
+  c.[Dirección] AS Direccion,
+  c.[Ciudad] AS Localidad,
+  c.[Provincia] AS Provincia,
+  c.[Pais] AS Pais,
+  c.[CódigoPostal] AS Cp,
+  l.[LinId],
+  l.[LinAlbId],
+  l.[LinModelo],
+  l.[LinDescripcion],
+  l.[LinPares],
+  l.[LinPrecio]
+FROM [Albaranes] a
+LEFT JOIN [AlbaranesLineas] l
+  ON l.[LinAlbId] = a.[AlbId]
+LEFT JOIN [Clientes] c
+  ON c.[IdCliente] = a.[AlbCliente]
+ORDER BY a.[AlbFecha] DESC, a.[AlbId] DESC
+''';
+
+      return await odbc.execute(sql);
+    } finally {
+      try {
+        await odbc.disconnect();
+      } catch (_) {}
+    }
+  }
 }
